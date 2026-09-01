@@ -241,10 +241,10 @@
     <span class="set-label">Clap sensitivity</span>
     <span class="set-val" id="sensVal">medium</span>
   </div>
-  <input type="range" id="sensSlider" min="8" max="40" value="22" step="1">
+  <input type="range" id="sensSlider" min="10" max="60" value="26" step="1">
   <div class="set-scale"><span>more sensitive</span><span>stricter</span></div>
   <div class="level-meter"><div class="level-fill" id="levelFill"></div></div>
-  <div class="set-note">Turn on "Clap to start" and clap — the bar shows the volume. Move the slider so a clap reaches the level but background noise doesn't.</div>
+  <div class="set-note">Turn on "Clap to start" and clap — the bar shows the volume. Slide toward "stricter" until only a firm clap triggers it and quiet clicks don't.</div>
 </div>
 
 <div class="tabs">
@@ -266,7 +266,7 @@
     <button class="btn btn-go" id="procGo">Start</button>
     <button class="btn btn-reset" id="procReset">Reset</button>
   </div>
-  <div class="hint" id="hint">+/– change time by 5 seconds. Beeps: start, every 30 sec, last 10 sec and end. After a step the timer waits — tap "Next".</div>
+  <div class="hint" id="hint">Clap: start · during countdown a clap pauses · when paused, one clap resumes, two claps within a second reset the step. +/– change time by 5 sec.</div>
 </div>
 
 <div class="view" id="calcView">
@@ -346,7 +346,7 @@ let steps=[
   {name:"Stop bath",dur:15},
   {name:"Fixer",dur:30},
 ];
-let curStep=0, procLeft=0, procTimer=null, procRunning=false, waitingNext=false;
+let curStep=0, procLeft=0, procTimer=null, procRunning=false, waitingNext=false, paused=false;
 let lastHalfMark=-1;
 const stepsList=document.getElementById("stepsList");
 const procDisplay=document.getElementById("procDisplay");
@@ -401,6 +401,9 @@ function renderProc(){
   if(waitingNext){
     procDisplay.textContent="✓";
     procSub.textContent=`step ${curStep+1} done · tap "Next"`;
+  }else if(paused){
+    procDisplay.textContent=fmtClock(procLeft);
+    procSub.textContent=`paused · tap Resume · double-clap to reset`;
   }else{
     procDisplay.textContent=fmtClock(procRunning?procLeft:(st?st.dur:0));
     procSub.textContent=procRunning
@@ -416,27 +419,32 @@ document.getElementById("addStep").onclick=()=>{
 procGo.onclick=()=>{
   ensureAudio();
   if(waitingNext){ goNext(); return; }
-  if(procRunning){ stopProc(); return; }
+  if(paused){ resumeStep(); return; }
+  if(procRunning){ pauseStep(); return; }
   startStep(curStep>=steps.length?0:curStep);
 };
 function setGo(label, mode){
   procGo.textContent=label;
   procGo.classList.toggle("stop", mode==="stop");
 }
-function startStep(i){
-  curStep=i; procLeft=steps[i].dur; procRunning=true; waitingNext=false;
-  lastHalfMark=0;
-  setGo("Stop","stop");
+function startStep(i, resumeFrom){
+  curStep=i;
+  procLeft = (resumeFrom!=null) ? resumeFrom : steps[i].dur;
+  procRunning=true; waitingNext=false; paused=false;
+  // при возобновлении не сбрасываем метки 30-секундных сигналов
+  if(resumeFrom==null) lastHalfMark=0;
+  setGo("Pause","stop");
   document.body.classList.add("running");
   renderSteps(); renderProc();
-  startSignal();
-  const start=performance.now(), base=procLeft;
+  if(resumeFrom==null) startSignal();
+  const base=procLeft, start=performance.now();
+  const baseElapsed=steps[i].dur-procLeft; // сколько уже прошло в этом шаге
   clearInterval(procTimer);
   procTimer=setInterval(()=>{
     procLeft=base-(performance.now()-start)/1000;
     if(procLeft<=0){ finishStep(); return; }
     renderProc();
-    const elapsed=base-procLeft;
+    const elapsed=baseElapsed+(base-procLeft);
     const mark=Math.floor(elapsed/30)*30;
     if(mark>0 && mark!==lastHalfMark && elapsed-mark<0.2){
       lastHalfMark=mark; halfMinuteSignal();
@@ -444,6 +452,32 @@ function startStep(i){
     const whole=Math.ceil(procLeft);
     if(whole<=10 && Math.abs(procLeft-whole)<0.05) tickBeep();
   },80);
+}
+/* Пауза: останавливаем отсчёт, запоминаем оставшееся время */
+function pauseStep(){
+  if(!procRunning) return;
+  clearInterval(procTimer);
+  procRunning=false; paused=true;
+  setGo("Resume","go");
+  document.body.classList.remove("running");
+  beep(520,0.12); if(navigator.vibrate) navigator.vibrate(80);
+  renderProc();
+}
+/* Возобновление с того же места */
+function resumeStep(){
+  if(!paused) return;
+  startStep(curStep, procLeft);
+}
+/* Сброс к началу текущего шага */
+function resetCurrentStep(){
+  clearInterval(procTimer);
+  procRunning=false; paused=false; waitingNext=false;
+  procLeft=steps[curStep].dur;
+  setGo("Start","go");
+  document.body.classList.remove("running");
+  beep(400,0.15); setTimeout(()=>beep(300,0.2),160);
+  if(navigator.vibrate) navigator.vibrate([100,60,100]);
+  renderSteps(); renderProc();
 }
 function finishStep(){
   clearInterval(procTimer);
@@ -467,7 +501,7 @@ function finishStep(){
 }
 function goNext(){ waitingNext=false; startStep(curStep+1); }
 function stopProc(){
-  clearInterval(procTimer); procRunning=false; waitingNext=false;
+  clearInterval(procTimer); procRunning=false; waitingNext=false; paused=false;
   setGo("Start","go");
   document.body.classList.remove("running");
   renderSteps(); renderProc();
@@ -479,7 +513,8 @@ renderSteps(); renderProc();
 
 /* ============ CLAP-TO-START ============ */
 let clapOn=false, micStream=null, analyser=null, clapRAF=null, clapCooldown=0;
-let clapThreshold=22;
+let clapThreshold=26;
+let pausePendingResume=null; // таймер ожидания второго хлопка на паузе
 
 const gearBtn=document.getElementById("gearBtn");
 const settingsPanel=document.getElementById("settingsPanel");
@@ -489,13 +524,16 @@ const levelFill=document.getElementById("levelFill");
 
 try{
   const saved=localStorage.getItem("clapThreshold");
-  if(saved!==null){ clapThreshold=parseInt(saved); sensSlider.value=clapThreshold; }
+  if(saved!==null){
+    const v=parseInt(saved);
+    if(v>=10 && v<=60){ clapThreshold=v; sensSlider.value=clapThreshold; }
+  }
 }catch(e){}
 
 function sensWord(v){
-  if(v<=14) return "high";
-  if(v<=22) return "medium";
-  if(v<=30) return "low";
+  if(v<=20) return "high";
+  if(v<=32) return "medium";
+  if(v<=46) return "low";
   return "very low";
 }
 function updateSensLabel(){ sensVal.textContent=sensWord(clapThreshold); }
@@ -510,6 +548,7 @@ sensSlider.oninput=()=>{
 
 const clapToggle=document.getElementById("clapToggle");
 const clapText=document.getElementById("clapText");
+let micSource=null; // держим ссылку, чтобы Safari не выгрузил источник
 clapToggle.onclick=async ()=>{
   if(clapOn){ disableClap(); return; }
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
@@ -518,13 +557,15 @@ clapToggle.onclick=async ()=>{
     return;
   }
   try{
-    ensureAudio();
-    micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     const ctx=ensureAudio();
-    const src=ctx.createMediaStreamSource(micStream);
+    micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    micSource=ctx.createMediaStreamSource(micStream);
     analyser=ctx.createAnalyser();
     analyser.fftSize=1024;
-    src.connect(analyser);
+    analyser.smoothingTimeConstant=0;
+    micSource.connect(analyser);
+    // iOS: контекст надо разбудить именно ПОСЛЕ подключения живого потока
+    if(ctx.state==="suspended"){ await ctx.resume(); }
     clapOn=true;
     clapToggle.classList.add("on");
     clapText.textContent="Listening ▫▫▫▫▫";
@@ -540,6 +581,7 @@ function disableClap(){
   clapText.textContent="Clap to start";
   if(levelFill) levelFill.style.width="0%";
   if(clapRAF) cancelAnimationFrame(clapRAF);
+  if(micSource){ try{micSource.disconnect();}catch(e){} micSource=null; }
   if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
 }
 /* Clap detected: wait 1 second, beep, then start the right step */
@@ -561,12 +603,14 @@ function listenClap(){
     for(let i=0;i<data.length;i++){ const v=Math.abs(data[i]-128); if(v>peak) peak=v; }
     const now=performance.now();
 
-    // status indicator: dots only when actually listening (timer not running)
-    if(!procRunning && now>clapCooldown){
+    // status indicator
+    if(paused){
+      clapText.textContent = "Paused · clap=resume, 2=reset";
+    }else if(procRunning){
+      clapText.textContent = "Counting · clap=pause";
+    }else if(now>clapCooldown){
       const bars=Math.min(5,Math.round(peak/12));
       clapText.textContent = "Listening "+"▪".repeat(bars)+"▫".repeat(5-bars);
-    }else if(procRunning){
-      clapText.textContent = "Counting down";
     }
 
     // level bar in settings
@@ -576,17 +620,46 @@ function listenClap(){
 
     const jump = peak - prevLevel;
     const loudEnough = peak > clapThreshold;
-    const sharpEnough = jump > Math.max(6, clapThreshold*0.55);
-    if(loudEnough && sharpEnough && now>clapCooldown && !procRunning){
-      clapCooldown=now+2000;
-      clapText.textContent="✓ Clap · start in 1s";
-      armStartByClap();
+    const sharpEnough = jump > clapThreshold*0.9;
+    const clapDetected = loudEnough && sharpEnough && now>clapCooldown;
+
+    if(clapDetected){
+      clapCooldown=now+450; // короче, чтобы двойной хлопок успевал считаться
+      handleClap();
     }
     prevLevel = peak>prevLevel ? peak : prevLevel*0.8 + peak*0.2;
 
     clapRAF=requestAnimationFrame(loop);
   };
   loop();
+}
+
+/* Что делает хлопок — зависит от состояния таймера */
+function handleClap(){
+  if(paused){
+    // Уже ждём второй хлопок? Значит это двойной → сброс шага
+    if(pausePendingResume!==null){
+      clearTimeout(pausePendingResume); pausePendingResume=null;
+      resetCurrentStep();
+      return;
+    }
+    // Первый хлопок на паузе: ждём 1 сек второго. Нет второго → возобновляем
+    if(navigator.vibrate) navigator.vibrate(50);
+    pausePendingResume=setTimeout(()=>{
+      pausePendingResume=null;
+      resumeStep();
+    },1000);
+    return;
+  }
+  if(procRunning){
+    // Идёт отсчёт → пауза
+    pauseStep();
+    return;
+  }
+  // Таймер стоит → запуск с задержкой 1 сек и сигналом
+  clapCooldown=performance.now()+2000;
+  clapText.textContent="✓ Clap · start in 1s";
+  armStartByClap();
 }
 
 /* Keep screen awake */
@@ -655,6 +728,14 @@ function calcTemp(){
 }
 [cVol,cTarget,cCold,cHot].forEach(inp=>inp.addEventListener("input",calcTemp));
 calcTemp();
+
+/* ============ OFFLINE (service worker) ============ */
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+
 </script>
 </body>
 </html>
