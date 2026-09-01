@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Тёмная комната">
+<meta name="apple-mobile-web-app-title" content="Darkroom">
 <meta name="theme-color" content="#000000">
-<title>Тёмная комната</title>
-<link rel="manifest" href='data:application/json,{"name":"Тёмная комната","short_name":"Таймер","start_url":".","display":"standalone","background_color":"#000000","theme_color":"#000000","orientation":"portrait","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22192%22 height=%22192%22%3E%3Crect width=%22192%22 height=%22192%22 fill=%22%23000%22/%3E%3Ccircle cx=%2296%22 cy=%2296%22 r=%2270%22 fill=%22none%22 stroke=%22%23ff2a1a%22 stroke-width=%2210%22/%3E%3Cline x1=%2296%22 y1=%2296%22 x2=%2296%22 y2=%2244%22 stroke=%22%23ff2a1a%22 stroke-width=%2210%22 stroke-linecap=%22round%22/%3E%3Cline x1=%2296%22 y1=%2296%22 x2=%22132%22 y2=%2296%22 stroke=%22%23ff2a1a%22 stroke-width=%228%22 stroke-linecap=%22round%22/%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
+<title>Darkroom Timer</title>
+<link rel="manifest" href='data:application/json,{"name":"Darkroom Timer","short_name":"Darkroom","start_url":".","display":"standalone","background_color":"#000000","theme_color":"#000000","orientation":"portrait","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22192%22 height=%22192%22%3E%3Crect width=%22192%22 height=%22192%22 fill=%22%23000%22/%3E%3Ccircle cx=%2296%22 cy=%2296%22 r=%2270%22 fill=%22none%22 stroke=%22%23ff2a1a%22 stroke-width=%2210%22/%3E%3Cline x1=%2296%22 y1=%2296%22 x2=%2296%22 y2=%2244%22 stroke=%22%23ff2a1a%22 stroke-width=%2210%22 stroke-linecap=%22round%22/%3E%3Cline x1=%2296%22 y1=%2296%22 x2=%22132%22 y2=%2296%22 stroke=%22%23ff2a1a%22 stroke-width=%228%22 stroke-linecap=%22round%22/%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
 <style>
   :root{
     --red:#ff2a1a;
@@ -45,96 +45,18 @@
     border-bottom:1px solid var(--red-faint);
   }
   .title{font-size:16px;font-weight:800;letter-spacing:.02em;white-space:nowrap;}
+  .topbar-right{display:flex;align-items:center;gap:8px;}
   .clap-toggle{
     display:flex;align-items:center;gap:8px;
     background:var(--panel);border:1.5px solid var(--red-faint);
     color:var(--red-dim);border-radius:12px;
     padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;
-    min-width:132px;justify-content:center;
+    min-width:140px;justify-content:center;
   }
   .clap-toggle.on{color:var(--red);border-color:var(--red);box-shadow:0 0 12px rgba(255,42,26,.3);}
   .clap-dot{width:10px;height:10px;border-radius:50%;background:var(--red-faint);flex:0 0 auto;}
   .clap-toggle.on .clap-dot{background:var(--red);box-shadow:0 0 8px var(--red-glow);animation:pulse 1s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
-
-  /* display */
-  .display-wrap{
-    flex:1 1 auto;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    min-height:0;padding:4px 12px;
-  }
-  .step-label{
-    font-size:clamp(18px,5.5vw,30px);font-weight:800;color:var(--red);
-    text-align:center;line-height:1.1;margin-bottom:2px;
-  }
-  .big-time{
-    font-variant-numeric:tabular-nums;font-weight:800;line-height:.88;
-    color:var(--red);text-shadow:0 0 26px rgba(255,42,26,.35);
-    letter-spacing:-.02em;font-size:clamp(60px,20vw,140px);
-  }
-  .running .big-time{text-shadow:0 0 44px rgba(255,42,26,.6);}
-  .sub-time{
-    font-size:clamp(14px,4vw,22px);color:var(--red-dim);
-    font-variant-numeric:tabular-nums;margin-top:8px;text-align:center;line-height:1.2;
-  }
-
-  /* steps */
-  .steps{
-    flex:0 0 auto;
-    overflow-y:auto;
-    padding:4px 12px;
-    display:flex;flex-direction:column;gap:10px;
-  }
-  .step{
-    display:flex;align-items:center;gap:8px;
-    background:var(--panel);border:2px solid var(--red-faint);
-    border-radius:16px;padding:16px 12px;
-  }
-  .step.current{border-color:var(--red);background:var(--red-faint);box-shadow:0 0 18px rgba(255,42,26,.3);}
-  .step.done{opacity:.4;}
-  .step-name{
-    flex:1 1 auto;font-size:19px;font-weight:800;
-    background:transparent;border:none;color:var(--red);
-    min-width:0;width:100%;padding:2px 0;text-overflow:ellipsis;
-  }
-  .step-name:focus{outline:1px dashed var(--red-dim);border-radius:4px;}
-  .step-dur{
-    font-variant-numeric:tabular-nums;font-size:24px;font-weight:800;
-    color:var(--red);min-width:62px;text-align:right;flex:0 0 auto;
-  }
-  .step-dur-btns{display:flex;gap:5px;flex:0 0 auto;}
-  .mini{
-    background:var(--red-faint);border:none;color:var(--red);
-    width:40px;height:40px;border-radius:10px;font-size:24px;font-weight:800;
-    cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;
-  }
-  .mini:active{background:var(--red-dim);}
-  .step-del{
-    background:transparent;border:none;color:var(--red-dim);
-    font-size:26px;cursor:pointer;padding:0 2px;line-height:1;flex:0 0 auto;
-  }
-  .add-step{
-    background:transparent;border:1.5px dashed var(--red-faint);
-    color:var(--red-dim);border-radius:12px;padding:10px;
-    font-size:15px;font-weight:700;cursor:pointer;margin:4px 12px 0;
-  }
-  .add-step:active{background:var(--red-faint);color:var(--red);}
-
-  /* controls */
-  .controls{flex:0 0 auto;padding:10px 12px 6px;display:flex;gap:10px;}
-  .btn{
-    border-radius:16px;border:none;font-weight:800;cursor:pointer;
-    padding:22px 0;font-size:clamp(20px,6vw,28px);letter-spacing:.01em;
-    transition:transform .05s;
-  }
-  .btn:active{transform:scale(.97);}
-  .btn-go{flex:2;background:var(--red);color:#000;box-shadow:0 0 24px rgba(255,42,26,.4);}
-  .btn-go.stop{background:var(--red-dim);color:var(--red);box-shadow:none;border:1.5px solid var(--red);}
-  .btn-reset{flex:1;background:var(--panel);color:var(--red);border:1.5px solid var(--red-faint);}
-  .btn-reset:active{background:var(--red-faint);}
-  .hint{text-align:center;color:var(--red-dim);font-size:11px;padding:2px 14px 8px;line-height:1.35;}
-
-  .topbar-right{display:flex;align-items:center;gap:8px;}
   .gear-btn{
     background:var(--panel);border:1.5px solid var(--red-faint);
     color:var(--red);border-radius:12px;
@@ -142,6 +64,8 @@
     display:flex;align-items:center;justify-content:center;
   }
   .gear-btn:active{background:var(--red-faint);}
+
+  /* settings */
   .settings-panel{
     display:none;flex:0 0 auto;
     background:var(--panel);border-bottom:1px solid var(--red-faint);
@@ -164,26 +88,104 @@
     width:30px;height:30px;border:none;border-radius:50%;
     background:var(--red);cursor:pointer;box-shadow:0 0 10px rgba(255,42,26,.5);
   }
-  .level-meter{
-    height:14px;background:var(--red-faint);border-radius:7px;overflow:hidden;margin-top:4px;
-    position:relative;
-  }
+  .level-meter{height:14px;background:var(--red-faint);border-radius:7px;overflow:hidden;margin-top:4px;position:relative;}
   .level-fill{height:100%;width:0%;background:var(--red);transition:width .05s;box-shadow:0 0 8px var(--red-glow);}
   .set-note{font-size:12px;color:var(--red-dim);line-height:1.4;}
 
-  /* tabs */
-  .tabs{flex:0 0 auto;display:flex;border-bottom:1px solid var(--red-faint);}
+  /* tabs — own row, clear separation, no overlap */
+  .tabs{
+    flex:0 0 auto;display:flex;
+    border-bottom:1px solid var(--red-faint);
+    background:var(--bg);
+  }
   .tab-btn{
     flex:1;background:transparent;border:none;color:var(--red-dim);
-    padding:14px 6px;font-size:16px;font-weight:800;cursor:pointer;
+    padding:12px 6px 14px;font-size:16px;font-weight:800;cursor:pointer;position:relative;
   }
   .tab-btn.active{color:var(--red);}
   .tab-btn.active::after{
-    content:"";display:block;height:3px;background:var(--red);
-    margin:9px 22% 0;border-radius:2px;box-shadow:0 0 10px var(--red-glow);
+    content:"";position:absolute;left:22%;right:22%;bottom:0;height:3px;
+    background:var(--red);border-radius:2px;box-shadow:0 0 10px var(--red-glow);
   }
+
+  /* views */
   .view{display:none;flex:1 1 auto;flex-direction:column;min-height:0;}
   .view.active{display:flex;}
+
+  /* timer display */
+  .display-wrap{
+    flex:1 1 auto;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:0;padding:6px 12px;overflow:hidden;
+  }
+  .step-label{
+    font-size:clamp(18px,5.5vw,30px);font-weight:800;color:var(--red);
+    text-align:center;line-height:1.1;margin-bottom:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  }
+  .big-time{
+    font-variant-numeric:tabular-nums;font-weight:800;line-height:.9;
+    color:var(--red);text-shadow:0 0 26px rgba(255,42,26,.35);
+    letter-spacing:-.02em;font-size:clamp(56px,18vw,130px);
+  }
+  .running .big-time{text-shadow:0 0 44px rgba(255,42,26,.6);}
+  .sub-time{
+    font-size:clamp(13px,3.6vw,20px);color:var(--red-dim);
+    font-variant-numeric:tabular-nums;margin-top:8px;text-align:center;line-height:1.2;
+  }
+
+  /* steps */
+  .steps{
+    flex:0 1 auto;overflow-y:auto;
+    padding:4px 12px;display:flex;flex-direction:column;gap:10px;
+  }
+  .step{
+    display:flex;align-items:center;gap:8px;
+    background:var(--panel);border:2px solid var(--red-faint);
+    border-radius:16px;padding:14px 12px;
+  }
+  .step.current{border-color:var(--red);background:var(--red-faint);box-shadow:0 0 18px rgba(255,42,26,.3);}
+  .step.done{opacity:.4;}
+  .step-name{
+    flex:1 1 auto;font-size:18px;font-weight:800;
+    background:transparent;border:none;color:var(--red);
+    min-width:0;width:100%;padding:2px 0;text-overflow:ellipsis;
+  }
+  .step-name:focus{outline:1px dashed var(--red-dim);border-radius:4px;}
+  .step-dur{
+    font-variant-numeric:tabular-nums;font-size:23px;font-weight:800;
+    color:var(--red);min-width:58px;text-align:right;flex:0 0 auto;
+  }
+  .step-dur-btns{display:flex;gap:5px;flex:0 0 auto;}
+  .mini{
+    background:var(--red-faint);border:none;color:var(--red);
+    width:40px;height:40px;border-radius:10px;font-size:24px;font-weight:800;
+    cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;
+  }
+  .mini:active{background:var(--red-dim);}
+  .step-del{
+    background:transparent;border:none;color:var(--red-dim);
+    font-size:26px;cursor:pointer;padding:0 2px;line-height:1;flex:0 0 auto;
+  }
+  .add-step{
+    background:transparent;border:1.5px dashed var(--red-faint);
+    color:var(--red-dim);border-radius:12px;padding:10px;
+    font-size:15px;font-weight:700;cursor:pointer;margin:8px 12px 0;flex:0 0 auto;
+  }
+  .add-step:active{background:var(--red-faint);color:var(--red);}
+
+  /* controls */
+  .controls{flex:0 0 auto;padding:10px 12px 6px;display:flex;gap:10px;}
+  .btn{
+    border-radius:16px;border:none;font-weight:800;cursor:pointer;
+    padding:20px 0;font-size:clamp(20px,6vw,28px);letter-spacing:.01em;transition:transform .05s;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-go{flex:2;background:var(--red);color:#000;box-shadow:0 0 24px rgba(255,42,26,.4);}
+  .btn-go.stop{background:var(--red-dim);color:var(--red);box-shadow:none;border:1.5px solid var(--red);}
+  .btn-reset{flex:1;background:var(--panel);color:var(--red);border:1.5px solid var(--red-faint);}
+  .btn-reset:active{background:var(--red-faint);}
+  .hint{text-align:center;color:var(--red-dim);font-size:11px;padding:2px 14px 8px;line-height:1.35;flex:0 0 auto;}
 
   /* calculator */
   .calc-wrap{
@@ -200,13 +202,15 @@
   }
   .calc-input-row input{
     flex:1;background:transparent;border:none;color:var(--red);
-    font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;
+    font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;
     padding:14px 0;min-width:0;outline:none;
   }
   .calc-input-row input:focus{color:var(--red-glow);}
-  .calc-unit{font-size:20px;font-weight:800;color:var(--red-dim);flex:0 0 auto;}
+  .calc-unit{font-size:19px;font-weight:800;color:var(--red-dim);flex:0 0 auto;}
   .calc-two{display:flex;gap:12px;}
-  .calc-two .calc-field{flex:1;}
+  .calc-two .calc-field{flex:1 1 0;min-width:0;}
+  .calc-two .calc-input-row{min-width:0;}
+  .calc-two input{min-width:0;}
   .calc-result{
     background:var(--panel);border:2px solid var(--red);
     border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;
@@ -214,7 +218,7 @@
   }
   .calc-res-row{display:flex;justify-content:space-between;align-items:baseline;}
   .calc-res-row span:first-child{font-size:17px;font-weight:700;color:var(--red-dim);}
-  .calc-res-val{font-size:30px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums;}
+  .calc-res-val{font-size:28px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums;}
   .calc-note{font-size:13px;color:var(--red-dim);line-height:1.45;text-align:center;min-height:1.2em;}
   .calc-note.warn{color:var(--red);font-weight:700;}
 </style>
@@ -222,60 +226,60 @@
 <body>
 
 <div class="topbar">
-  <div class="title">Тёмная комната</div>
+  <div class="title">Darkroom</div>
   <div class="topbar-right">
     <button class="clap-toggle" id="clapToggle">
       <span class="clap-dot"></span>
-      <span id="clapText">Старт по хлопку</span>
+      <span id="clapText">Clap to start</span>
     </button>
-    <button class="gear-btn" id="gearBtn" aria-label="Настройки">⚙</button>
+    <button class="gear-btn" id="gearBtn" aria-label="Settings">⚙</button>
   </div>
 </div>
 
 <div class="settings-panel" id="settingsPanel">
   <div class="set-row">
-    <span class="set-label">Чувствительность хлопка</span>
-    <span class="set-val" id="sensVal">средняя</span>
+    <span class="set-label">Clap sensitivity</span>
+    <span class="set-val" id="sensVal">medium</span>
   </div>
   <input type="range" id="sensSlider" min="8" max="40" value="22" step="1">
-  <div class="set-scale"><span>чувствительнее</span><span>строже</span></div>
+  <div class="set-scale"><span>more sensitive</span><span>stricter</span></div>
   <div class="level-meter"><div class="level-fill" id="levelFill"></div></div>
-  <div class="set-note">Включите «Старт по хлопку» и хлопните — полоска показывает громкость. Двигайте ползунок так, чтобы хлопок доходил до отметки, а фоновый шум — нет.</div>
+  <div class="set-note">Turn on "Clap to start" and clap — the bar shows the volume. Move the slider so a clap reaches the level but background noise doesn't.</div>
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" data-tab="timer">Таймер</button>
-  <button class="tab-btn" data-tab="calc">Калькулятор t°</button>
+  <button class="tab-btn active" data-tab="timer">Timer</button>
+  <button class="tab-btn" data-tab="calc">Temp calculator</button>
 </div>
 
 <div class="view active" id="timerView">
-<div class="display-wrap">
-  <div class="step-label" id="procLabel">Проявитель</div>
-  <div class="big-time" id="procDisplay">2:00</div>
-  <div class="sub-time" id="procSub">шаг 1 из 3</div>
-</div>
+  <div class="display-wrap">
+    <div class="step-label" id="procLabel">Developer</div>
+    <div class="big-time" id="procDisplay">2:00</div>
+    <div class="sub-time" id="procSub">step 1 of 3</div>
+  </div>
 
-<div class="steps" id="stepsList"></div>
-<button class="add-step" id="addStep">+ Добавить шаг</button>
+  <div class="steps" id="stepsList"></div>
+  <button class="add-step" id="addStep">+ Add step</button>
 
-<div class="controls">
-  <button class="btn btn-go" id="procGo">Старт</button>
-  <button class="btn btn-reset" id="procReset">Сброс</button>
-</div>
-<div class="hint" id="hint">+/– меняют время по 5 секунд. Сигналы: старт, каждые 30 сек, последние 10 сек и конец. После шага таймер ждёт — жмите «Дальше».</div>
+  <div class="controls">
+    <button class="btn btn-go" id="procGo">Start</button>
+    <button class="btn btn-reset" id="procReset">Reset</button>
+  </div>
+  <div class="hint" id="hint">+/– change time by 5 seconds. Beeps: start, every 30 sec, last 10 sec and end. After a step the timer waits — tap "Next".</div>
 </div>
 
 <div class="view" id="calcView">
   <div class="calc-wrap">
     <div class="calc-field">
-      <label>Нужный объём</label>
+      <label>Target volume</label>
       <div class="calc-input-row">
         <input type="number" id="cVol" inputmode="decimal" value="1000">
-        <span class="calc-unit">мл</span>
+        <span class="calc-unit">ml</span>
       </div>
     </div>
     <div class="calc-field">
-      <label>Нужная температура</label>
+      <label>Target temperature</label>
       <div class="calc-input-row">
         <input type="number" id="cTarget" inputmode="decimal" value="35">
         <span class="calc-unit">°C</span>
@@ -283,14 +287,14 @@
     </div>
     <div class="calc-two">
       <div class="calc-field">
-        <label>Холодная</label>
+        <label>Cold</label>
         <div class="calc-input-row">
           <input type="number" id="cCold" inputmode="decimal" value="20">
           <span class="calc-unit">°C</span>
         </div>
       </div>
       <div class="calc-field">
-        <label>Горячая</label>
+        <label>Hot</label>
         <div class="calc-input-row">
           <input type="number" id="cHot" inputmode="decimal" value="100">
           <span class="calc-unit">°C</span>
@@ -299,8 +303,8 @@
     </div>
 
     <div class="calc-result" id="calcResult">
-      <div class="calc-res-row"><span>Холодной</span><span class="calc-res-val" id="resCold">—</span></div>
-      <div class="calc-res-row"><span>Горячей</span><span class="calc-res-val" id="resHot">—</span></div>
+      <div class="calc-res-row"><span>Cold</span><span class="calc-res-val" id="resCold">—</span></div>
+      <div class="calc-res-row"><span>Hot</span><span class="calc-res-val" id="resHot">—</span></div>
     </div>
     <div class="calc-note" id="calcNote"></div>
   </div>
@@ -338,9 +342,9 @@ function tickBeep(){ beep(1400,0.05,"sine",0.35); }
 
 /* ============ STEPS ============ */
 let steps=[
-  {name:"Проявитель",dur:120},
-  {name:"Стоп-ванна",dur:15},
-  {name:"Фиксаж",dur:30},
+  {name:"Developer",dur:120},
+  {name:"Stop bath",dur:15},
+  {name:"Fixer",dur:30},
 ];
 let curStep=0, procLeft=0, procTimer=null, procRunning=false, waitingNext=false;
 let lastHalfMark=-1;
@@ -396,17 +400,17 @@ function renderProc(){
   procLabel.textContent=st?st.name:"—";
   if(waitingNext){
     procDisplay.textContent="✓";
-    procSub.textContent=`шаг ${curStep+1} готов · нажмите «Дальше»`;
+    procSub.textContent=`step ${curStep+1} done · tap "Next"`;
   }else{
     procDisplay.textContent=fmtClock(procRunning?procLeft:(st?st.dur:0));
     procSub.textContent=procRunning
-      ? `осталось · шаг ${curStep+1} из ${steps.length}`
-      : `шаг ${curStep+1} из ${steps.length}`;
+      ? `remaining · step ${curStep+1} of ${steps.length}`
+      : `step ${curStep+1} of ${steps.length}`;
   }
 }
 document.getElementById("addStep").onclick=()=>{
   if(procRunning||waitingNext) return;
-  steps.push({name:"Новый шаг",dur:60});
+  steps.push({name:"New step",dur:60});
   renderSteps(); renderProc();
 };
 procGo.onclick=()=>{
@@ -422,7 +426,7 @@ function setGo(label, mode){
 function startStep(i){
   curStep=i; procLeft=steps[i].dur; procRunning=true; waitingNext=false;
   lastHalfMark=0;
-  setGo("Стоп","stop");
+  setGo("Stop","stop");
   document.body.classList.add("running");
   renderSteps(); renderProc();
   startSignal();
@@ -447,24 +451,24 @@ function finishStep(){
   if(curStep+1<steps.length){
     waitingNext=true;
     stepChangeSignal();
-    setGo("Дальше","go");
+    setGo("Next","go");
     document.body.classList.remove("running");
     renderSteps(); renderProc();
   }else{
     endSignal();
-    setGo("Старт","go");
+    setGo("Start","go");
     document.body.classList.remove("running");
     curStep=0;
     renderSteps();
     procLabel.textContent=steps[0].name;
     procDisplay.textContent=fmtClock(steps[0].dur);
-    procSub.textContent="все шаги завершены";
+    procSub.textContent="all steps done";
   }
 }
 function goNext(){ waitingNext=false; startStep(curStep+1); }
 function stopProc(){
   clearInterval(procTimer); procRunning=false; waitingNext=false;
-  setGo("Старт","go");
+  setGo("Start","go");
   document.body.classList.remove("running");
   renderSteps(); renderProc();
 }
@@ -475,26 +479,24 @@ renderSteps(); renderProc();
 
 /* ============ CLAP-TO-START ============ */
 let clapOn=false, micStream=null, analyser=null, clapRAF=null, clapCooldown=0;
-let clapThreshold=22;   // порог громкости хлопка (меньше = чувствительнее)
+let clapThreshold=22;
 
-/* --- Настройки: ползунок чувствительности --- */
 const gearBtn=document.getElementById("gearBtn");
 const settingsPanel=document.getElementById("settingsPanel");
 const sensSlider=document.getElementById("sensSlider");
 const sensVal=document.getElementById("sensVal");
 const levelFill=document.getElementById("levelFill");
 
-// восстановить сохранённое значение, если есть
 try{
   const saved=localStorage.getItem("clapThreshold");
   if(saved!==null){ clapThreshold=parseInt(saved); sensSlider.value=clapThreshold; }
 }catch(e){}
 
 function sensWord(v){
-  if(v<=14) return "высокая";
-  if(v<=22) return "средняя";
-  if(v<=30) return "низкая";
-  return "очень низкая";
+  if(v<=14) return "high";
+  if(v<=22) return "medium";
+  if(v<=30) return "low";
+  return "very low";
 }
 function updateSensLabel(){ sensVal.textContent=sensWord(clapThreshold); }
 updateSensLabel();
@@ -511,8 +513,8 @@ const clapText=document.getElementById("clapText");
 clapToggle.onclick=async ()=>{
   if(clapOn){ disableClap(); return; }
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    clapText.textContent="Микрофон недоступен здесь";
-    setTimeout(()=>{clapText.textContent="Старт по хлопку";},2800);
+    clapText.textContent="Mic not available";
+    setTimeout(()=>{clapText.textContent="Clap to start";},2800);
     return;
   }
   try{
@@ -525,22 +527,22 @@ clapToggle.onclick=async ()=>{
     src.connect(analyser);
     clapOn=true;
     clapToggle.classList.add("on");
-    clapText.textContent="Слушаю ▫▫▫▫▫";
+    clapText.textContent="Listening ▫▫▫▫▫";
     listenClap();
   }catch(e){
-    clapText.textContent = (location.protocol==="file:") ? "Откройте по ссылке https" : "Нет доступа к микрофону";
-    setTimeout(()=>{clapText.textContent="Старт по хлопку";},3000);
+    clapText.textContent = (location.protocol==="file:") ? "Open via https link" : "No mic access";
+    setTimeout(()=>{clapText.textContent="Clap to start";},3000);
   }
 };
 function disableClap(){
   clapOn=false;
   clapToggle.classList.remove("on");
-  clapText.textContent="Старт по хлопку";
+  clapText.textContent="Clap to start";
   if(levelFill) levelFill.style.width="0%";
   if(clapRAF) cancelAnimationFrame(clapRAF);
   if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
 }
-/* Хлопок пойман: ждём 1 секунду, даём сигнал, затем запускаем нужный шаг */
+/* Clap detected: wait 1 second, beep, then start the right step */
 function armStartByClap(){
   if(navigator.vibrate) navigator.vibrate(60);
   setTimeout(()=>{
@@ -551,7 +553,7 @@ function armStartByClap(){
 }
 function listenClap(){
   const data=new Uint8Array(analyser.fftSize);
-  let prevLevel=0;        // сглаженный фоновый уровень
+  let prevLevel=0;
   const loop=()=>{
     if(!clapOn) return;
     analyser.getByteTimeDomainData(data);
@@ -559,30 +561,27 @@ function listenClap(){
     for(let i=0;i<data.length;i++){ const v=Math.abs(data[i]-128); if(v>peak) peak=v; }
     const now=performance.now();
 
-    // Индикатор: точки только когда реально слушаем (таймер не идёт)
+    // status indicator: dots only when actually listening (timer not running)
     if(!procRunning && now>clapCooldown){
       const bars=Math.min(5,Math.round(peak/12));
-      clapText.textContent = "Слушаю "+"▪".repeat(bars)+"▫".repeat(5-bars);
+      clapText.textContent = "Listening "+"▪".repeat(bars)+"▫".repeat(5-bars);
     }else if(procRunning){
-      clapText.textContent = "Идёт отсчёт";
+      clapText.textContent = "Counting down";
     }
 
-    // Полоска уровня в настройках (если панель открыта)
+    // level bar in settings
     if(settingsPanel.classList.contains("open")){
       levelFill.style.width = Math.min(100, Math.round(peak/60*100)) + "%";
     }
 
-    // Срабатываем на РЕЗКИЙ скачок громкости (хлопок), а не на общий уровень.
     const jump = peak - prevLevel;
     const loudEnough = peak > clapThreshold;
     const sharpEnough = jump > Math.max(6, clapThreshold*0.55);
-    // Слушаем хлопок ТОЛЬКО когда таймер не идёт: на старте и на паузах между шагами
     if(loudEnough && sharpEnough && now>clapCooldown && !procRunning){
       clapCooldown=now+2000;
-      clapText.textContent="✓ Хлопок · старт через 1с";
+      clapText.textContent="✓ Clap · start in 1s";
       armStartByClap();
     }
-    // Плавно обновляем фоновый уровень (быстро вверх, медленно вниз)
     prevLevel = peak>prevLevel ? peak : prevLevel*0.8 + peak*0.2;
 
     clapRAF=requestAnimationFrame(loop);
@@ -603,7 +602,6 @@ document.querySelectorAll(".tab-btn").forEach(b=>{
     document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
     document.getElementById(b.dataset.tab+"View").classList.add("active");
-    // Кнопки хлопка/настроек нужны только в таймере
     const onTimer=(b.dataset.tab==="timer");
     document.querySelector(".topbar-right").style.visibility = onTimer ? "visible" : "hidden";
     if(!onTimer){ settingsPanel.classList.remove("open"); }
@@ -620,11 +618,8 @@ const resHot=document.getElementById("resHot");
 const calcNote=document.getElementById("calcNote");
 
 function fmtMl(ml){
-  if(ml>=1000){
-    const l=ml/1000;
-    return (Math.round(l*100)/100)+" л";
-  }
-  return Math.round(ml)+" мл";
+  if(ml>=1000){ const l=ml/1000; return (Math.round(l*100)/100)+" l"; }
+  return Math.round(ml)+" ml";
 }
 function calcTemp(){
   const V=parseFloat(cVol.value);
@@ -632,7 +627,6 @@ function calcTemp(){
   const cold=parseFloat(cCold.value);
   const hot=parseFloat(cHot.value);
 
-  // проверки на пустые/некорректные значения
   if([V,T,cold,hot].some(x=>isNaN(x)) || V<=0){
     resCold.textContent="—"; resHot.textContent="—";
     calcNote.textContent=""; calcNote.classList.remove("warn");
@@ -640,17 +634,15 @@ function calcTemp(){
   }
   if(hot===cold){
     resCold.textContent="—"; resHot.textContent="—";
-    calcNote.textContent="Температуры холодной и горячей совпадают — смешивать нечего.";
+    calcNote.textContent="Cold and hot temperatures are the same — nothing to mix.";
     calcNote.classList.add("warn");
     return;
   }
-  // Формула смешивания: доля горячей = (T - cold) / (hot - cold)
   const fracHot=(T-cold)/(hot-cold);
-
   if(fracHot<0 || fracHot>1){
     resCold.textContent="—"; resHot.textContent="—";
     const lo=Math.min(cold,hot), hi=Math.max(cold,hot);
-    calcNote.textContent=`Нужная температура ${T}° вне диапазона: смешиванием этих жидкостей получится только от ${lo}° до ${hi}°.`;
+    calcNote.textContent=`Target ${T}° is out of range: mixing these liquids can only reach ${lo}°–${hi}°.`;
     calcNote.classList.add("warn");
     return;
   }
@@ -658,12 +650,11 @@ function calcTemp(){
   const volCold=V-volHot;
   resCold.textContent=fmtMl(volCold);
   resHot.textContent=fmtMl(volHot);
-  calcNote.textContent=`Смешайте, чтобы получить ${fmtMl(V)} при ${T}°C.`;
+  calcNote.textContent=`Mix to get ${fmtMl(V)} at ${T}°C.`;
   calcNote.classList.remove("warn");
 }
 [cVol,cTarget,cCold,cHot].forEach(inp=>inp.addEventListener("input",calcTemp));
 calcTemp();
-
 </script>
 </body>
 </html>
