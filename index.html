@@ -266,7 +266,7 @@
     <button class="btn btn-go" id="procGo">Start</button>
     <button class="btn btn-reset" id="procReset">Reset</button>
   </div>
-  <div class="hint" id="hint">Clap to start. During countdown: one clap pauses, two claps within half a second reset the step. When paused, a clap resumes. +/– change time by 5 sec.</div>
+  <div class="hint" id="hint">Clap to start. During countdown a clap pauses. When paused: one clap resumes, two claps reset the step. +/– change time by 5 sec.</div>
 </div>
 
 <div class="view" id="calcView">
@@ -403,7 +403,7 @@ function renderProc(){
     procSub.textContent=`step ${curStep+1} done · tap "Next"`;
   }else if(paused){
     procDisplay.textContent=fmtClock(procLeft);
-    procSub.textContent=`paused · tap Resume or clap`;
+    procSub.textContent=`paused · clap to resume · 2 claps reset`;
   }else{
     procDisplay.textContent=fmtClock(procRunning?procLeft:(st?st.dur:0));
     procSub.textContent=procRunning
@@ -605,9 +605,9 @@ function listenClap(){
 
     // status indicator
     if(paused){
-      clapText.textContent = "Paused · clap to resume";
+      clapText.textContent = "Paused · 1=resume 2=reset";
     }else if(procRunning){
-      clapText.textContent = "Clap: 1=pause 2=reset";
+      clapText.textContent = "Clap to pause";
     }else if(now>clapCooldown){
       const bars=Math.min(5,Math.round(peak/12));
       clapText.textContent = "Listening "+"▪".repeat(bars)+"▫".repeat(5-bars);
@@ -624,7 +624,7 @@ function listenClap(){
     const clapDetected = loudEnough && sharpEnough && now>clapCooldown;
 
     if(clapDetected){
-      clapCooldown=now+200; // короткая «глухота», чтобы второй хлопок успевал считаться
+      clapCooldown=now+150; // короткая «глухота»; окно двойного хлопка на паузе — 600мс
       handleClap();
     }
     prevLevel = peak>prevLevel ? peak : prevLevel*0.8 + peak*0.2;
@@ -636,8 +636,14 @@ function listenClap(){
 
 /* Что делает хлопок — зависит от состояния таймера */
 function handleClap(){
-  // ИДЁТ ОТСЧЁТ: ждём 0.5 сек второго хлопка. Один → пауза, два → сброс шага
+  // ИДЁТ ОТСЧЁТ: один хлопок = пауза сразу, без ожидания
   if(procRunning){
+    if(navigator.vibrate) navigator.vibrate(40);
+    pauseStep();
+    return;
+  }
+  // НА ПАУЗЕ: ждём 0.6 сек второго хлопка. Один → продолжить, два → сброс шага
+  if(paused){
     if(navigator.vibrate) navigator.vibrate(40);
     if(pausePendingResume!==null){
       // это второй хлопок за окно → сброс
@@ -647,15 +653,9 @@ function handleClap(){
       // первый хлопок → ждём, не будет ли второго
       pausePendingResume=setTimeout(()=>{
         pausePendingResume=null;
-        pauseStep();
-      },500);
+        resumeStep();
+      },600);
     }
-    return;
-  }
-  // НА ПАУЗЕ: один хлопок = продолжить с того же места
-  if(paused){
-    if(navigator.vibrate) navigator.vibrate(50);
-    resumeStep();
     return;
   }
   // ТАЙМЕР СТОИТ: запуск с задержкой 1 сек и сигналом
