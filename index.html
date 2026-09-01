@@ -50,6 +50,7 @@
     background:var(--panel);border:1.5px solid var(--red-faint);
     color:var(--red-dim);border-radius:12px;
     padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;
+    min-width:132px;justify-content:center;
   }
   .clap-toggle.on{color:var(--red);border-color:var(--red);box-shadow:0 0 12px rgba(255,42,26,.3);}
   .clap-dot{width:10px;height:10px;border-radius:50%;background:var(--red-faint);flex:0 0 auto;}
@@ -63,13 +64,13 @@
     min-height:0;padding:4px 12px;
   }
   .step-label{
-    font-size:clamp(20px,6.5vw,38px);font-weight:800;color:var(--red);
+    font-size:clamp(18px,5.5vw,30px);font-weight:800;color:var(--red);
     text-align:center;line-height:1.1;margin-bottom:2px;
   }
   .big-time{
     font-variant-numeric:tabular-nums;font-weight:800;line-height:.88;
     color:var(--red);text-shadow:0 0 26px rgba(255,42,26,.35);
-    letter-spacing:-.02em;font-size:clamp(72px,26vw,190px);
+    letter-spacing:-.02em;font-size:clamp(60px,20vw,140px);
   }
   .running .big-time{text-shadow:0 0 44px rgba(255,42,26,.6);}
   .sub-time{
@@ -82,34 +83,34 @@
     flex:0 0 auto;
     overflow-y:auto;
     padding:4px 12px;
-    display:flex;flex-direction:column;gap:6px;
+    display:flex;flex-direction:column;gap:10px;
   }
   .step{
-    display:flex;align-items:center;gap:10px;
-    background:var(--panel);border:1.5px solid var(--red-faint);
-    border-radius:12px;padding:8px 10px;
+    display:flex;align-items:center;gap:12px;
+    background:var(--panel);border:2px solid var(--red-faint);
+    border-radius:16px;padding:16px 14px;
   }
-  .step.current{border-color:var(--red);background:var(--red-faint);box-shadow:0 0 14px rgba(255,42,26,.25);}
+  .step.current{border-color:var(--red);background:var(--red-faint);box-shadow:0 0 18px rgba(255,42,26,.3);}
   .step.done{opacity:.4;}
   .step-name{
-    flex:1;font-size:15px;font-weight:700;
+    flex:1;font-size:20px;font-weight:800;
     background:transparent;border:none;color:var(--red);min-width:0;padding:2px 0;
   }
   .step-name:focus{outline:1px dashed var(--red-dim);border-radius:4px;}
   .step-dur{
-    font-variant-numeric:tabular-nums;font-size:19px;font-weight:800;
-    color:var(--red);min-width:56px;text-align:right;
+    font-variant-numeric:tabular-nums;font-size:26px;font-weight:800;
+    color:var(--red);min-width:70px;text-align:right;
   }
-  .step-dur-btns{display:flex;gap:4px;}
+  .step-dur-btns{display:flex;gap:6px;}
   .mini{
     background:var(--red-faint);border:none;color:var(--red);
-    width:36px;height:36px;border-radius:9px;font-size:22px;font-weight:800;
+    width:44px;height:44px;border-radius:11px;font-size:26px;font-weight:800;
     cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;
   }
   .mini:active{background:var(--red-dim);}
   .step-del{
     background:transparent;border:none;color:var(--red-dim);
-    font-size:24px;cursor:pointer;padding:0 2px;line-height:1;
+    font-size:28px;cursor:pointer;padding:0 4px;line-height:1;
   }
   .add-step{
     background:transparent;border:1.5px dashed var(--red-faint);
@@ -346,7 +347,7 @@ clapToggle.onclick=async ()=>{
     src.connect(analyser);
     clapOn=true;
     clapToggle.classList.add("on");
-    clapText.textContent="Слушаю хлопок";
+    clapText.textContent="Слушаю ▫▫▫▫▫";
     listenClap();
   }catch(e){
     clapText.textContent = (location.protocol==="file:") ? "Откройте по ссылке https" : "Нет доступа к микрофону";
@@ -360,20 +361,46 @@ function disableClap(){
   if(clapRAF) cancelAnimationFrame(clapRAF);
   if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
 }
+/* Хлопок пойман: ждём 1 секунду, даём сигнал, затем запускаем нужный шаг */
+function armStartByClap(){
+  if(navigator.vibrate) navigator.vibrate(60);
+  setTimeout(()=>{
+    startSignal();
+    if(waitingNext){ goNext(); }
+    else { startStep(curStep>=steps.length?0:curStep); }
+  },1000);
+}
 function listenClap(){
   const data=new Uint8Array(analyser.fftSize);
+  let prevLevel=0;        // сглаженный фоновый уровень
   const loop=()=>{
     if(!clapOn) return;
     analyser.getByteTimeDomainData(data);
     let peak=0;
     for(let i=0;i<data.length;i++){ const v=Math.abs(data[i]-128); if(v>peak) peak=v; }
     const now=performance.now();
-    if(peak>96 && now>clapCooldown){
-      clapCooldown=now+900;
-      if(waitingNext){ goNext(); }
-      else if(!procRunning){ startStep(curStep>=steps.length?0:curStep); }
-      else { stopProc(); }
+
+    // Индикатор: точки только когда реально слушаем (таймер не идёт)
+    if(!procRunning && now>clapCooldown){
+      const bars=Math.min(5,Math.round(peak/12));
+      clapText.textContent = "Слушаю "+"▪".repeat(bars)+"▫".repeat(5-bars);
+    }else if(procRunning){
+      clapText.textContent = "Идёт отсчёт";
     }
+
+    // Срабатываем на РЕЗКИЙ скачок громкости (хлопок), а не на общий уровень.
+    const jump = peak - prevLevel;
+    const loudEnough = peak > 22;
+    const sharpEnough = jump > 13;
+    // Слушаем хлопок ТОЛЬКО когда таймер не идёт: на старте и на паузах между шагами
+    if(loudEnough && sharpEnough && now>clapCooldown && !procRunning){
+      clapCooldown=now+2000;
+      clapText.textContent="✓ Хлопок · старт через 1с";
+      armStartByClap();
+    }
+    // Плавно обновляем фоновый уровень (быстро вверх, медленно вниз)
+    prevLevel = peak>prevLevel ? peak : prevLevel*0.8 + peak*0.2;
+
     clapRAF=requestAnimationFrame(loop);
   };
   loop();
