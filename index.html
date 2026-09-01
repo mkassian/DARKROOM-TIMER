@@ -86,31 +86,32 @@
     display:flex;flex-direction:column;gap:10px;
   }
   .step{
-    display:flex;align-items:center;gap:12px;
+    display:flex;align-items:center;gap:8px;
     background:var(--panel);border:2px solid var(--red-faint);
-    border-radius:16px;padding:16px 14px;
+    border-radius:16px;padding:16px 12px;
   }
   .step.current{border-color:var(--red);background:var(--red-faint);box-shadow:0 0 18px rgba(255,42,26,.3);}
   .step.done{opacity:.4;}
   .step-name{
-    flex:1;font-size:20px;font-weight:800;
-    background:transparent;border:none;color:var(--red);min-width:0;padding:2px 0;
+    flex:1 1 auto;font-size:19px;font-weight:800;
+    background:transparent;border:none;color:var(--red);
+    min-width:0;width:100%;padding:2px 0;text-overflow:ellipsis;
   }
   .step-name:focus{outline:1px dashed var(--red-dim);border-radius:4px;}
   .step-dur{
-    font-variant-numeric:tabular-nums;font-size:26px;font-weight:800;
-    color:var(--red);min-width:70px;text-align:right;
+    font-variant-numeric:tabular-nums;font-size:24px;font-weight:800;
+    color:var(--red);min-width:62px;text-align:right;flex:0 0 auto;
   }
-  .step-dur-btns{display:flex;gap:6px;}
+  .step-dur-btns{display:flex;gap:5px;flex:0 0 auto;}
   .mini{
     background:var(--red-faint);border:none;color:var(--red);
-    width:44px;height:44px;border-radius:11px;font-size:26px;font-weight:800;
+    width:40px;height:40px;border-radius:10px;font-size:24px;font-weight:800;
     cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;
   }
   .mini:active{background:var(--red-dim);}
   .step-del{
     background:transparent;border:none;color:var(--red-dim);
-    font-size:28px;cursor:pointer;padding:0 4px;line-height:1;
+    font-size:26px;cursor:pointer;padding:0 2px;line-height:1;flex:0 0 auto;
   }
   .add-step{
     background:transparent;border:1.5px dashed var(--red-faint);
@@ -132,18 +133,122 @@
   .btn-reset{flex:1;background:var(--panel);color:var(--red);border:1.5px solid var(--red-faint);}
   .btn-reset:active{background:var(--red-faint);}
   .hint{text-align:center;color:var(--red-dim);font-size:11px;padding:2px 14px 8px;line-height:1.35;}
+
+  .topbar-right{display:flex;align-items:center;gap:8px;}
+  .gear-btn{
+    background:var(--panel);border:1.5px solid var(--red-faint);
+    color:var(--red);border-radius:12px;
+    width:40px;height:40px;font-size:20px;cursor:pointer;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .gear-btn:active{background:var(--red-faint);}
+  .settings-panel{
+    display:none;flex:0 0 auto;
+    background:var(--panel);border-bottom:1px solid var(--red-faint);
+    padding:14px 16px;flex-direction:column;gap:8px;
+  }
+  .settings-panel.open{display:flex;}
+  .set-row{display:flex;justify-content:space-between;align-items:baseline;}
+  .set-label{font-size:15px;font-weight:700;color:var(--red);}
+  .set-val{font-size:14px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums;}
+  .set-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--red-dim);margin-top:-2px;}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:8px;
+    background:var(--red-faint);border-radius:5px;outline:none;margin:4px 0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:50%;
+    background:var(--red);cursor:pointer;box-shadow:0 0 10px rgba(255,42,26,.5);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:30px;height:30px;border:none;border-radius:50%;
+    background:var(--red);cursor:pointer;box-shadow:0 0 10px rgba(255,42,26,.5);
+  }
+  .level-meter{
+    height:14px;background:var(--red-faint);border-radius:7px;overflow:hidden;margin-top:4px;
+    position:relative;
+  }
+  .level-fill{height:100%;width:0%;background:var(--red);transition:width .05s;box-shadow:0 0 8px var(--red-glow);}
+  .set-note{font-size:12px;color:var(--red-dim);line-height:1.4;}
+
+  /* tabs */
+  .tabs{flex:0 0 auto;display:flex;border-bottom:1px solid var(--red-faint);}
+  .tab-btn{
+    flex:1;background:transparent;border:none;color:var(--red-dim);
+    padding:14px 6px;font-size:16px;font-weight:800;cursor:pointer;
+  }
+  .tab-btn.active{color:var(--red);}
+  .tab-btn.active::after{
+    content:"";display:block;height:3px;background:var(--red);
+    margin:9px 22% 0;border-radius:2px;box-shadow:0 0 10px var(--red-glow);
+  }
+  .view{display:none;flex:1 1 auto;flex-direction:column;min-height:0;}
+  .view.active{display:flex;}
+
+  /* calculator */
+  .calc-wrap{
+    flex:1 1 auto;overflow-y:auto;
+    padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .calc-field{display:flex;flex-direction:column;gap:6px;}
+  .calc-field label{font-size:14px;font-weight:700;color:var(--red-dim);}
+  .calc-input-row{
+    display:flex;align-items:center;gap:10px;
+    background:var(--panel);border:2px solid var(--red-faint);
+    border-radius:14px;padding:0 14px;
+  }
+  .calc-input-row input{
+    flex:1;background:transparent;border:none;color:var(--red);
+    font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;
+    padding:14px 0;min-width:0;outline:none;
+  }
+  .calc-input-row input:focus{color:var(--red-glow);}
+  .calc-unit{font-size:20px;font-weight:800;color:var(--red-dim);flex:0 0 auto;}
+  .calc-two{display:flex;gap:12px;}
+  .calc-two .calc-field{flex:1;}
+  .calc-result{
+    background:var(--panel);border:2px solid var(--red);
+    border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;
+    box-shadow:0 0 20px rgba(255,42,26,.25);margin-top:2px;
+  }
+  .calc-res-row{display:flex;justify-content:space-between;align-items:baseline;}
+  .calc-res-row span:first-child{font-size:17px;font-weight:700;color:var(--red-dim);}
+  .calc-res-val{font-size:30px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums;}
+  .calc-note{font-size:13px;color:var(--red-dim);line-height:1.45;text-align:center;min-height:1.2em;}
+  .calc-note.warn{color:var(--red);font-weight:700;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="title">Тёмная комната</div>
-  <button class="clap-toggle" id="clapToggle">
-    <span class="clap-dot"></span>
-    <span id="clapText">Старт по хлопку</span>
-  </button>
+  <div class="topbar-right">
+    <button class="clap-toggle" id="clapToggle">
+      <span class="clap-dot"></span>
+      <span id="clapText">Старт по хлопку</span>
+    </button>
+    <button class="gear-btn" id="gearBtn" aria-label="Настройки">⚙</button>
+  </div>
 </div>
 
+<div class="settings-panel" id="settingsPanel">
+  <div class="set-row">
+    <span class="set-label">Чувствительность хлопка</span>
+    <span class="set-val" id="sensVal">средняя</span>
+  </div>
+  <input type="range" id="sensSlider" min="8" max="40" value="22" step="1">
+  <div class="set-scale"><span>чувствительнее</span><span>строже</span></div>
+  <div class="level-meter"><div class="level-fill" id="levelFill"></div></div>
+  <div class="set-note">Включите «Старт по хлопку» и хлопните — полоска показывает громкость. Двигайте ползунок так, чтобы хлопок доходил до отметки, а фоновый шум — нет.</div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="timer">Таймер</button>
+  <button class="tab-btn" data-tab="calc">Калькулятор t°</button>
+</div>
+
+<div class="view active" id="timerView">
 <div class="display-wrap">
   <div class="step-label" id="procLabel">Проявитель</div>
   <div class="big-time" id="procDisplay">2:00</div>
@@ -158,6 +263,48 @@
   <button class="btn btn-reset" id="procReset">Сброс</button>
 </div>
 <div class="hint" id="hint">+/– меняют время по 5 секунд. Сигналы: старт, каждые 30 сек, последние 10 сек и конец. После шага таймер ждёт — жмите «Дальше».</div>
+</div>
+
+<div class="view" id="calcView">
+  <div class="calc-wrap">
+    <div class="calc-field">
+      <label>Нужный объём</label>
+      <div class="calc-input-row">
+        <input type="number" id="cVol" inputmode="decimal" value="1000">
+        <span class="calc-unit">мл</span>
+      </div>
+    </div>
+    <div class="calc-field">
+      <label>Нужная температура</label>
+      <div class="calc-input-row">
+        <input type="number" id="cTarget" inputmode="decimal" value="35">
+        <span class="calc-unit">°C</span>
+      </div>
+    </div>
+    <div class="calc-two">
+      <div class="calc-field">
+        <label>Холодная</label>
+        <div class="calc-input-row">
+          <input type="number" id="cCold" inputmode="decimal" value="20">
+          <span class="calc-unit">°C</span>
+        </div>
+      </div>
+      <div class="calc-field">
+        <label>Горячая</label>
+        <div class="calc-input-row">
+          <input type="number" id="cHot" inputmode="decimal" value="100">
+          <span class="calc-unit">°C</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="calc-result" id="calcResult">
+      <div class="calc-res-row"><span>Холодной</span><span class="calc-res-val" id="resCold">—</span></div>
+      <div class="calc-res-row"><span>Горячей</span><span class="calc-res-val" id="resHot">—</span></div>
+    </div>
+    <div class="calc-note" id="calcNote"></div>
+  </div>
+</div>
 
 <script>
 /* ============ AUDIO ============ */
@@ -328,6 +475,37 @@ renderSteps(); renderProc();
 
 /* ============ CLAP-TO-START ============ */
 let clapOn=false, micStream=null, analyser=null, clapRAF=null, clapCooldown=0;
+let clapThreshold=22;   // порог громкости хлопка (меньше = чувствительнее)
+
+/* --- Настройки: ползунок чувствительности --- */
+const gearBtn=document.getElementById("gearBtn");
+const settingsPanel=document.getElementById("settingsPanel");
+const sensSlider=document.getElementById("sensSlider");
+const sensVal=document.getElementById("sensVal");
+const levelFill=document.getElementById("levelFill");
+
+// восстановить сохранённое значение, если есть
+try{
+  const saved=localStorage.getItem("clapThreshold");
+  if(saved!==null){ clapThreshold=parseInt(saved); sensSlider.value=clapThreshold; }
+}catch(e){}
+
+function sensWord(v){
+  if(v<=14) return "высокая";
+  if(v<=22) return "средняя";
+  if(v<=30) return "низкая";
+  return "очень низкая";
+}
+function updateSensLabel(){ sensVal.textContent=sensWord(clapThreshold); }
+updateSensLabel();
+
+gearBtn.onclick=()=>{ settingsPanel.classList.toggle("open"); };
+sensSlider.oninput=()=>{
+  clapThreshold=parseInt(sensSlider.value);
+  updateSensLabel();
+  try{ localStorage.setItem("clapThreshold", String(clapThreshold)); }catch(e){}
+};
+
 const clapToggle=document.getElementById("clapToggle");
 const clapText=document.getElementById("clapText");
 clapToggle.onclick=async ()=>{
@@ -358,6 +536,7 @@ function disableClap(){
   clapOn=false;
   clapToggle.classList.remove("on");
   clapText.textContent="Старт по хлопку";
+  if(levelFill) levelFill.style.width="0%";
   if(clapRAF) cancelAnimationFrame(clapRAF);
   if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
 }
@@ -388,10 +567,15 @@ function listenClap(){
       clapText.textContent = "Идёт отсчёт";
     }
 
+    // Полоска уровня в настройках (если панель открыта)
+    if(settingsPanel.classList.contains("open")){
+      levelFill.style.width = Math.min(100, Math.round(peak/60*100)) + "%";
+    }
+
     // Срабатываем на РЕЗКИЙ скачок громкости (хлопок), а не на общий уровень.
     const jump = peak - prevLevel;
-    const loudEnough = peak > 22;
-    const sharpEnough = jump > 13;
+    const loudEnough = peak > clapThreshold;
+    const sharpEnough = jump > Math.max(6, clapThreshold*0.55);
     // Слушаем хлопок ТОЛЬКО когда таймер не идёт: на старте и на паузах между шагами
     if(loudEnough && sharpEnough && now>clapCooldown && !procRunning){
       clapCooldown=now+2000;
@@ -411,6 +595,75 @@ let wakeLock=null;
 async function keepAwake(){ try{ wakeLock=await navigator.wakeLock.request("screen"); }catch(e){} }
 document.body.addEventListener("click",()=>{ if(!wakeLock) keepAwake(); },{once:true});
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&!wakeLock) keepAwake(); });
+
+/* ============ TABS ============ */
+document.querySelectorAll(".tab-btn").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById(b.dataset.tab+"View").classList.add("active");
+    // Кнопки хлопка/настроек нужны только в таймере
+    const onTimer=(b.dataset.tab==="timer");
+    document.querySelector(".topbar-right").style.visibility = onTimer ? "visible" : "hidden";
+    if(!onTimer){ settingsPanel.classList.remove("open"); }
+  };
+});
+
+/* ============ TEMPERATURE CALCULATOR ============ */
+const cVol=document.getElementById("cVol");
+const cTarget=document.getElementById("cTarget");
+const cCold=document.getElementById("cCold");
+const cHot=document.getElementById("cHot");
+const resCold=document.getElementById("resCold");
+const resHot=document.getElementById("resHot");
+const calcNote=document.getElementById("calcNote");
+
+function fmtMl(ml){
+  if(ml>=1000){
+    const l=ml/1000;
+    return (Math.round(l*100)/100)+" л";
+  }
+  return Math.round(ml)+" мл";
+}
+function calcTemp(){
+  const V=parseFloat(cVol.value);
+  const T=parseFloat(cTarget.value);
+  const cold=parseFloat(cCold.value);
+  const hot=parseFloat(cHot.value);
+
+  // проверки на пустые/некорректные значения
+  if([V,T,cold,hot].some(x=>isNaN(x)) || V<=0){
+    resCold.textContent="—"; resHot.textContent="—";
+    calcNote.textContent=""; calcNote.classList.remove("warn");
+    return;
+  }
+  if(hot===cold){
+    resCold.textContent="—"; resHot.textContent="—";
+    calcNote.textContent="Температуры холодной и горячей совпадают — смешивать нечего.";
+    calcNote.classList.add("warn");
+    return;
+  }
+  // Формула смешивания: доля горячей = (T - cold) / (hot - cold)
+  const fracHot=(T-cold)/(hot-cold);
+
+  if(fracHot<0 || fracHot>1){
+    resCold.textContent="—"; resHot.textContent="—";
+    const lo=Math.min(cold,hot), hi=Math.max(cold,hot);
+    calcNote.textContent=`Нужная температура ${T}° вне диапазона: смешиванием этих жидкостей получится только от ${lo}° до ${hi}°.`;
+    calcNote.classList.add("warn");
+    return;
+  }
+  const volHot=V*fracHot;
+  const volCold=V-volHot;
+  resCold.textContent=fmtMl(volCold);
+  resHot.textContent=fmtMl(volHot);
+  calcNote.textContent=`Смешайте, чтобы получить ${fmtMl(V)} при ${T}°C.`;
+  calcNote.classList.remove("warn");
+}
+[cVol,cTarget,cCold,cHot].forEach(inp=>inp.addEventListener("input",calcTemp));
+calcTemp();
+
 </script>
 </body>
 </html>
