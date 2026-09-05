@@ -151,6 +151,11 @@
     background:transparent;border:none;color:var(--red);
     min-width:0;width:100%;padding:2px 0;text-overflow:ellipsis;
   }
+  /* Пока поле только для чтения — не выделять текст и не показывать меню при удержании */
+  .step-name[readonly]{
+    user-select:none;-webkit-user-select:none;
+    -webkit-touch-callout:none;pointer-events:none;
+  }
   .step-name:focus{outline:1px dashed var(--red-dim);border-radius:4px;}
   .step-dur{
     font-variant-numeric:tabular-nums;font-size:23px;font-weight:800;
@@ -339,6 +344,27 @@ function endSignal(){
   if(navigator.vibrate) navigator.vibrate([150,80,150,80,300]);
 }
 function tickBeep(){ beep(1400,0.05,"sine",0.35); }
+/* Три разных сигнала, различимых на слух в темноте */
+function pauseSignal(){   // нисходящий «дын-дон» — остановка
+  ensureAudio();
+  beep(700,0.14,"square",0.6);
+  setTimeout(()=>beep(440,0.18,"square",0.6),150);
+  if(navigator.vibrate) navigator.vibrate(90);
+}
+function resumeSignal(){  // восходящий «ди-ди-ДИТ» — снова пошёл, три ноты вверх
+  ensureAudio();
+  beep(523,0.12,"square",0.6);
+  setTimeout(()=>beep(659,0.12,"square",0.6),140);
+  setTimeout(()=>beep(880,0.20,"square",0.6),280);
+  if(navigator.vibrate) navigator.vibrate([50,40,50,40,80]);
+}
+function resetSignal(){   // низкий длинный нисходящий — сброс
+  ensureAudio();
+  beep(500,0.16,"sawtooth",0.6);
+  setTimeout(()=>beep(370,0.16,"sawtooth",0.6),170);
+  setTimeout(()=>beep(250,0.30,"sawtooth",0.6),340);
+  if(navigator.vibrate) navigator.vibrate([120,70,120,70,200]);
+}
 
 /* ============ STEPS ============ */
 let steps=[
@@ -346,7 +372,7 @@ let steps=[
   {name:"Stop bath",dur:15},
   {name:"Fixer",dur:30},
 ];
-let curStep=0, procLeft=0, procTimer=null, procRunning=false, waitingNext=false, paused=false;
+let curStep=0, procLeft=0, procTimer=null, procRunning=false, waitingNext=false, paused=false, singleStep=false;
 let lastHalfMark=-1;
 const stepsList=document.getElementById("stepsList");
 const procDisplay=document.getElementById("procDisplay");
@@ -363,10 +389,12 @@ function renderSteps(){
   stepsList.innerHTML="";
   steps.forEach((st,i)=>{
     const active=(procRunning||waitingNext);
+    // текущий шаг подсвечиваем и когда идёт таймер, и когда выбран вручную
+    const isCurrent = (i===curStep) && (active || singleStep);
     const div=document.createElement("div");
-    div.className="step"+(i===curStep&&active?" current":"")+(i<curStep&&active?" done":"");
+    div.className="step"+(isCurrent?" current":"")+(i<curStep&&active?" done":"");
     div.innerHTML=`
-      <input class="step-name" value="${st.name.replace(/"/g,'&quot;')}" data-i="${i}">
+      <input class="step-name" value="${st.name.replace(/"/g,'&quot;')}" data-i="${i}" readonly>
       <span class="step-dur">${fmtClock(st.dur)}</span>
       <div class="step-dur-btns">
         <button class="mini" data-dur="-5" data-i="${i}">–</button>
@@ -395,6 +423,74 @@ stepsList.addEventListener("input",e=>{
   const inp=e.target.closest(".step-name");
   if(inp) steps[inp.dataset.i].name=inp.value;
 });
+/* Двойной тап/клик по строке — разрешить редактирование её названия */
+stepsList.addEventListener("dblclick",e=>{
+  if(procRunning||waitingNext) return;
+  if(e.target.closest(".mini,.step-del")) return;
+  const row=e.target.closest(".step");
+  if(!row) return;
+  const inp=row.querySelector(".step-name");
+  if(inp){
+    inp.removeAttribute("readonly");
+    inp.focus(); inp.select();
+  }
+});
+/* Уехал фокус — снова только для чтения */
+stepsList.addEventListener("focusout",e=>{
+  const inp=e.target.closest(".step-name");
+  if(inp) inp.setAttribute("readonly","");
+});
+
+/* Долгое нажатие (0.5с) на строку — выбрать этот шаг как стартовый (одиночный прогон) */
+let holdTimer=null, holdStartX=0, holdStartY=0;
+function stepIndexFrom(target){
+  const row=target.closest(".step");
+  if(!row) return -1;
+  return [...stepsList.children].indexOf(row);
+}
+function beginHold(e){
+  if(procRunning||waitingNext) return;
+  // не реагируем на нажатия по кнопкам +/-/×
+  if(e.target.closest(".mini,.step-del")) return;
+  const i=stepIndexFrom(e.target);
+  if(i<0) return;
+  const p=(e.touches&&e.touches[0])||e;
+  holdStartX=p.clientX; holdStartY=p.clientY;
+  holdTimer=setTimeout(()=>{
+    holdTimer=null;
+    selectStartStep(i);
+    // при выборе шага снимаем фокус с поля имени, если он был
+    if(document.activeElement && document.activeElement.classList.contains("step-name")){
+      document.activeElement.blur();
+    }
+  },500);
+}
+function moveHold(e){
+  if(holdTimer==null) return;
+  const p=(e.touches&&e.touches[0])||e;
+  // если палец уехал (скролл) — отменяем удержание
+  if(Math.abs(p.clientX-holdStartX)>10 || Math.abs(p.clientY-holdStartY)>10){
+    clearTimeout(holdTimer); holdTimer=null;
+  }
+}
+function endHold(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; } }
+stepsList.addEventListener("touchstart",beginHold,{passive:true});
+stepsList.addEventListener("touchmove",moveHold,{passive:true});
+stepsList.addEventListener("touchend",endHold);
+stepsList.addEventListener("mousedown",beginHold);
+stepsList.addEventListener("mousemove",moveHold);
+stepsList.addEventListener("mouseup",endHold);
+stepsList.addEventListener("mouseleave",endHold);
+
+/* Выбрать шаг как стартовый: он станет текущим, прогон будет одиночным */
+function selectStartStep(i){
+  curStep=i; singleStep=true; waitingNext=false; paused=false;
+  procLeft=steps[i].dur;
+  // сигнал выбора + подсветка
+  beep(880,0.09,"sine",0.5); setTimeout(()=>beep(1100,0.09,"sine",0.5),90);
+  if(navigator.vibrate) navigator.vibrate(60);
+  renderSteps(); renderProc();
+}
 function renderProc(){
   const st=steps[curStep]||steps[0];
   procLabel.textContent=st?st.name:"—";
@@ -406,9 +502,13 @@ function renderProc(){
     procSub.textContent=`paused · clap to resume · 2 claps reset`;
   }else{
     procDisplay.textContent=fmtClock(procRunning?procLeft:(st?st.dur:0));
-    procSub.textContent=procRunning
-      ? `remaining · step ${curStep+1} of ${steps.length}`
-      : `step ${curStep+1} of ${steps.length}`;
+    if(procRunning){
+      procSub.textContent=`remaining · step ${curStep+1} of ${steps.length}`;
+    }else if(singleStep){
+      procSub.textContent=`${st.name} only · tap Start`;
+    }else{
+      procSub.textContent=`step ${curStep+1} of ${steps.length}`;
+    }
   }
 }
 document.getElementById("addStep").onclick=()=>{
@@ -460,13 +560,16 @@ function pauseStep(){
   procRunning=false; paused=true;
   setGo("Resume","go");
   document.body.classList.remove("running");
-  beep(520,0.12); if(navigator.vibrate) navigator.vibrate(80);
+  pauseSignal();
   renderProc();
 }
 /* Возобновление с того же места */
 function resumeStep(){
   if(!paused) return;
-  startStep(curStep, procLeft);
+  paused=false;              // выходим из паузы сразу, чтобы повторный хлопок не мешал
+  resumeSignal();
+  // даём сигналу отзвучать, потом запускаем отсчёт
+  setTimeout(()=>startStep(curStep, procLeft), 550);
 }
 /* Сброс к началу текущего шага */
 function resetCurrentStep(){
@@ -475,13 +578,22 @@ function resetCurrentStep(){
   procLeft=steps[curStep].dur;
   setGo("Start","go");
   document.body.classList.remove("running");
-  beep(400,0.15); setTimeout(()=>beep(300,0.2),160);
-  if(navigator.vibrate) navigator.vibrate([100,60,100]);
+  resetSignal();
   renderSteps(); renderProc();
 }
 function finishStep(){
   clearInterval(procTimer);
   procRunning=false;
+  // Одиночный прогон (шаг выбран вручную) — сразу конец, без перехода к следующему
+  if(singleStep){
+    singleStep=false;
+    endSignal();
+    setGo("Start","go");
+    document.body.classList.remove("running");
+    renderSteps();
+    procSub.textContent=`${steps[curStep].name} done`;
+    return;
+  }
   if(curStep+1<steps.length){
     waitingNext=true;
     stepChangeSignal();
@@ -501,12 +613,14 @@ function finishStep(){
 }
 function goNext(){ waitingNext=false; startStep(curStep+1); }
 function stopProc(){
-  clearInterval(procTimer); procRunning=false; waitingNext=false; paused=false;
+  clearInterval(procTimer); procRunning=false; waitingNext=false; paused=false; singleStep=false;
   setGo("Start","go");
   document.body.classList.remove("running");
   renderSteps(); renderProc();
 }
 document.getElementById("procReset").onclick=()=>{
+  ensureAudio();
+  resetSignal();
   stopProc(); curStep=0; renderSteps(); renderProc();
 };
 renderSteps(); renderProc();

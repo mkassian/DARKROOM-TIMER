@@ -1,5 +1,5 @@
 /* Darkroom Timer — offline cache */
-const CACHE = "darkroom-v6";
+const CACHE = "darkroom-v13";
 const ASSETS = ["./", "./index.html"];
 
 // При установке — кладём страницу в кэш
